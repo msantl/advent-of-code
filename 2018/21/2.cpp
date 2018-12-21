@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -60,6 +61,7 @@ vector<Cmd> cmds;
 
 int main(int argc, char **argv) {
   memset(r, 0, sizeof r);
+
   char cmd[5];
   int a, b, c, ip_id;
   scanf("#ip %d\n", &ip_id);
@@ -67,12 +69,20 @@ int main(int argc, char **argv) {
     cmds.push_back(Cmd{fun[cmd], a, b, c});
   }
 
+  int last_r2;
+  // r[0] = 6267260;
+  set<int> s;
   while (true) {
     cmds[r[ip_id]].execute();
     if (r[ip_id] + 1 >= cmds.size()) break;
     r[ip_id]++;
-  }
 
-  cout << r[0] << endl;
+    if (r[ip_id] == 28) {
+      if (s.find(r[2]) != s.end()) break;
+      last_r2 = r[2];
+      s.insert(r[2]);
+    }
+  }
+  cout << last_r2 << endl;
   return 0;
 }
