@@ -20,8 +20,10 @@ var ip: Int = 0
 var relativeBase: Int = 0
 var halt: Boolean = false
 
-fun runOnce(input: List<Int>, returnOnOutput: Boolean): Int {
+fun runOnce(input: List<Int>, returnOnOutput: Boolean): MutableList<Int> {
     var inputPointer: Int = 0
+    val results: MutableList<Int> = mutableListOf()
+
     while (!halt) {
         val command: Int = memory.getOrDefault(ip++, 0)
         val modes: List<Int> = getValueModes(command)
@@ -60,7 +62,6 @@ fun runOnce(input: List<Int>, returnOnOutput: Boolean): Int {
                 if (modes.get(1) == 2) addr = addr + relativeBase
 
                 // Input
-                println("Reading ${input.get(inputPointer)} from index $inputPointer")
                 memory.put(addr, input.get(inputPointer))
                 inputPointer++
             }
@@ -70,8 +71,10 @@ fun runOnce(input: List<Int>, returnOnOutput: Boolean): Int {
                 else if (modes.get(1) == 2) res = memory.getOrDefault(res + relativeBase, 0)
 
                 // Output
-                if (returnOnOutput ) return res
-                println("output $res")
+                if (returnOnOutput) {
+                    return mutableListOf(res)
+                }
+                results.add(res)
             }
             5 -> {
                 var val1: Int = memory.getOrDefault(ip++, 0)
@@ -133,7 +136,7 @@ fun runOnce(input: List<Int>, returnOnOutput: Boolean): Int {
             99 -> halt = true
         }
     }
-    return -1
+    return results
 }
 
 val map: MutableMap<Pair<Int, Int>, Int> = mutableMapOf()
@@ -159,12 +162,12 @@ fun main() {
 
     while (true) {
         val res = runOnce(emptyList(), true)
-        if (res == -1) break
-        if (res == 10) {
+        if (res.isEmpty()) break
+        if (res.first() == 10) {
             pos_y += 1
             pos_x = 0
         } else {
-            map.put(pos_y to pos_x, res)
+            map.put(pos_y to pos_x, res.first())
             pos_x += 1
         }
     }
@@ -215,17 +218,6 @@ fun main() {
         solution.add("${turn},${len}")
     }
 
-    val n = map.keys.toList().map { it.first }.max()!!
-    val m = map.keys.toList().map { it.second }.max()!!
-
-    for (i in 0..n) {
-        for (j in 0..m) {
-            val p = map.getValue(i to j)
-            print(p.toChar())
-        }
-        println("")
-    }
-
     relativeBase = 0
     halt = false
     ip = 0
@@ -235,8 +227,93 @@ fun main() {
     }
     memory.put(0, 2)
 
+    val lists: MutableList<MutableList<String>> = mutableListOf()
+    val bio: MutableMap<Int, Char> = mutableMapOf()
+    val arr: MutableMap<Int, Char> = mutableMapOf()
+    var groupMark: Char = 'A'
 
-    val finalSolution = listOf("A,B,A,B,C,C,B,A,B,C", "L,4,R,8,L,6,L,10", "L,6,R,8,R,10,L,6,L,6", "L,4,L,4,L,10")
+    for (first in 0 until solution.size) {
+        if (bio.containsKey(first)) continue
+
+        var subSolution: MutableList<Int> = mutableListOf()
+        var subSolutionLength: Int = 0
+        for (length in 5 downTo 1) {
+
+            if (first + length > solution.size) continue
+
+            var alreadyVisited = false
+            var subSolutionLengthCheck = 0
+            for (j in 0 until length) {
+                if (bio.containsKey(first + j)) {
+                    alreadyVisited = true
+                }
+                subSolutionLengthCheck += solution[first + j].length + 1
+            }
+
+            if ((first == 0 && subSolutionLengthCheck > 20) || (first > 0 && subSolutionLengthCheck > 21)) {
+                continue
+            }
+
+            if (alreadyVisited) {
+                continue
+            }
+
+            val repeating: MutableList<Int> = mutableListOf()
+            var offset: Int = first + length
+            while (offset <= solution.size - length) {
+                var found = true
+                for (j in 0 until length) {
+                    if (bio.containsKey(offset + j) || solution[first + j] != solution[offset + j]) {
+                        found = false;
+                        break
+                    }
+                }
+                if (found) {
+                    repeating.add(offset)
+                    offset += length
+                } else {
+                    offset += 1
+                }
+            }
+
+            if (repeating.size > 0) {
+                subSolution = repeating
+                subSolutionLength = length
+                break
+            }
+        }
+
+        val list: MutableList<String> = mutableListOf()
+        for (j in 0 until subSolutionLength) {
+            list.add(solution[first + j])
+            bio.put(first + j, groupMark)
+
+            for (starts in subSolution) {
+                bio.put(starts + j, groupMark)
+            }
+        }
+
+        arr.put(first, groupMark)
+        for (starts in subSolution) {
+            arr.put(starts, groupMark)
+        }
+
+        lists.add(list)
+        groupMark += 1
+    }
+
+    val arrangement: MutableList<Char> = mutableListOf()
+    for (i in 0 until solution.size) {
+        if (arr.containsKey(i)) {
+            arrangement.add(arr.getValue(i))
+        }
+    }
+
+    val finalSolution = mutableListOf(arrangement.joinToString(","))
+    for (list in lists) {
+        finalSolution.add(list.joinToString(","))
+    }
+
     val instructions: MutableList<Int> = mutableListOf()
 
     for (i in 0 until finalSolution.size) {
@@ -249,8 +326,8 @@ fun main() {
     instructions.add('n'.toInt())
     instructions.add(10)
 
-    println(instructions)
-    println(runOnce(instructions, false))
+    val final = runOnce(instructions, false)
+    println(final.last())
 }
 
 main()

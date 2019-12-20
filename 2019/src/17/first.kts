@@ -163,7 +163,6 @@ fun main() {
         }
     }
 
-
     val sol = map.entries.stream()
         .filter { it.value == 35 }
         .filter { it -> map.getOrDefault(it.key.first - 1 to it.key.second, 0) == 35 }
