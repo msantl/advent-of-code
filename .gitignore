@@ -1,3 +1,16 @@
 *.swp
 *.out
 *.in
+
+*.iml
+
+.DS_Store
+
+.idea
+.idea/*
+
+2021/.idea
+2021/.idea/*
+
+2021/out
+2021/out/*
