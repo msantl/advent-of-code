@@ -1,3 +1,5 @@
+package `02`
+
 import java.io.File
 
 fun first(filename: String) {
